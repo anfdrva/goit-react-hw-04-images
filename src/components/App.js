@@ -1,4 +1,4 @@
-import { Component } from "react";
+import { useEffect, useState } from "react";
 import SearchBar from "./Searchbar/Searchbar";
 import { ImageGallery } from "./ImageGallery/ImageGallery";
 import { fetchImages } from "api";
@@ -8,94 +8,63 @@ import Modal from "./Modal/Modal";
 import { Button } from "./Button/Button";
 
 
+export const App = () => {
+  const [value, setValue] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loader, setLoader] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [largeImage, setLargeImage] = useState('');
 
-export class App extends Component { 
-    state = {
-        value: '',
-        images: [],
-        page: 1,
-        loader: false,
-        showModal: false,
-        largeImage: '',
-    };
+  const handlerSubmit = value => {
+    setValue(value);
+    setPage(1);
+    setImages([]);
+  };
 
-    handlerSubmit = value => {
-        this.setState({ value, page: 1, images: [] });
-    };
+  const openModal = index => {
+    setShowModal(true);
+    setLargeImage(images[index].largeImageURL);
+  };
 
-    handlerClick = () => {
-        this.setState(prevState => ({ page: prevState + 1 }));
-    };
+  const toggleModal = () => {
+    setShowModal(prevItem => !prevItem);
+  };
 
-    openModal = index => {
-        this.setState(({ images }) => ({
-            showModal: true,
-            largeImage: images[index].largeImageURL,
-        }))
-    };
+  const nextPage = () => {
+    setPage(prevItem => prevItem + 1);
+  };
 
-    toggleModal = () => {
-        this.setState(({ showModal }) => ({ showModal: !showModal }));
-    }
-
-    nextPage = () => {
-        this.setState(({page}) =>({page: page + 1}))
-    }
-
-    async componentDidUpdate(prevPops, prevState) {
-
-        if (prevState.value !== this.state.value || prevState.page !== this.state.page) {
-            this.setState({ loader: true });
-
-            try {
-                const images = await fetchImages(this.state.value, this.state.page);
-                this.setState(prevState => {
-                    return {
-                        images: [...prevState.images, ...images.hits],
-                        showBtn: this.state.page < Math.ceil(images.totalHits / 20)
-                    };
-                });
-                //console.log(imagesItem.hits)
-            }
-            catch (error) {
-                console.log(error);
-            }
-            finally {
-                this.setState({loader: false})
-            }
-
-        }
+  useEffect(() => {
+    async function getImages() {
+      setLoader(true);
+      try {
+      const images = await fetchImages(value, page);
+        setImages(prevItem => [...prevItem, ...images.hits]);
         
     }
-
-
-    
-    render() {
-        return (
-            <AppStyled>
-                <SearchBar onSubmit={this.handlerSubmit} />
-                {this.state.images.length > 0 && (<ImageGallery items={this.state.images} openModal={this.openModal} />)}
-                {this.state.showModal && (<Modal toggleModal={this.toggleModal} largeImage={this.state.largeImage} />)}
-                {this.state.loader && <Loader />}
-                {this.state.images.length >= 12 && <Button nextPage={this.nextPage} />}
-            </AppStyled>
-        )
+    catch (error) {
+      console.log(error);
     }
+    finally {
+        setLoader(false);
+    }
+    }
+    if (value && (page === 1 || page !== 1)) {
+      getImages();
+    }
+  }, [value, page])
+
+
+  return (
+          <AppStyled>
+            <SearchBar onSubmit={handlerSubmit} />
+            {images.length > 0 && (<ImageGallery items={images} openModal={openModal} />)}
+            {showModal && (<Modal toggleModal={toggleModal} largeImage={largeImage} />)}
+            {loader && <Loader />}
+            {images.length >= 12 && <Button nextPage={nextPage} />}
+          </AppStyled>
+         )
 }
 
-// export const App = () => {
-//   return (
-//     <div
-//       style={{
-//         height: '100vh',
-//         display: 'flex',
-//         justifyContent: 'center',
-//         alignItems: 'center',
-//         fontSize: 40,
-//         color: '#010101'
-//       }}
-//     >
-//       React homework template
-//     </div>
-//   );
-// };
+

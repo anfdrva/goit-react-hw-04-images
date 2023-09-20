@@ -1,45 +1,40 @@
-import { Component } from "react";
+import { useState } from "react";
 import { SearchBarStyled, SearchForm, SearchFormButton, SearchFormButtonLabel, SearchFormInput } from "./Searchbar.styled"
 
 
-class SearchBar extends Component {
-    state = {
-        input: '',
-        prevInput: '',
-    }
+export const SearchBar = ({onSubmit}) => {
 
-    handlerChange = ({ target }) => {
-        this.setState({ input: target.value });
+    const [input, setInput] = useState('');
+    const [prevInput, setPrevInput] = useState('');
+
+    const handlerChange = ({ target }) => {
+        setInput(target.value);
     };
 
-    handlerSubmit = evt => {
+    const handlerSubmit = evt => {
         evt.preventDefault();
-        if (this.state.input !== this.state.prevInput) {
-            this.props.onSubmit(this.state.input);
-            this.setState(prevState => ({
-                prevInput: prevState.input,
-            }))
+        if (input !== prevInput) {
+            onSubmit(input); 
+            setPrevInput(input);
         }
     };
 
-    render() {
-        return (
-                <SearchBarStyled className="searchbar">
-                    <SearchForm className="form" onSubmit={this.handlerSubmit}>
-                        <SearchFormButton type="submit" className="button">
-                            <SearchFormButtonLabel className="button-label">Search</SearchFormButtonLabel>
-                        </SearchFormButton>
-                        <SearchFormInput
-                            className="input"
-                            type="text"
-                            placeholder="Search images and photos"
-                            onChange={this.handlerChange}
-                            value={this.state.input}
-                        />
-                    </SearchForm>
-                </SearchBarStyled>
-            )
-    }
+    return (
+             <SearchBarStyled className="searchbar">
+                 <SearchForm className="form" onSubmit={handlerSubmit}>
+                     <SearchFormButton type="submit" className="button">
+                         <SearchFormButtonLabel className="button-label">Search</SearchFormButtonLabel>
+                     </SearchFormButton>
+                     <SearchFormInput
+                         className="input"
+                         type="text"
+                         placeholder="Search images and photos"
+                         onChange={handlerChange}
+                         value={input}
+                     />
+                 </SearchForm>
+             </SearchBarStyled>
+         )
 }
 
 export default SearchBar;
